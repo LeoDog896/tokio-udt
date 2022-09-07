@@ -42,7 +42,7 @@ impl SndBufferBlock {
                 seq_number,
                 in_order: self.in_order,
                 position: self.position,
-                timestamp: (start_time.elapsed().as_micros() & (u32::MAX as u128)) as u32,
+                timestamp: (start_time.elapsed().as_micros() & (u128::from(u32::MAX))) as u32,
             },
         }
     }

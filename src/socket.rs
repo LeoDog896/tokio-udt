@@ -746,7 +746,7 @@ impl UdtSocket {
             // TODO increment NAK stats
         }
 
-        if payload_len < self.get_max_payload_size() {
+        if payload_len < self.get_max_payload_size() as usize {
             self.state().next_ack_time = Instant::now();
         }
 

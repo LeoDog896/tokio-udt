@@ -209,8 +209,7 @@ impl UdtRcvQueue {
                 let mut sockets = self.sockets.lock().unwrap();
                 while sockets
                     .front()
-                    .map(|(ts, _)| ts.elapsed() > TIMERS_CHECK_INTERVAL)
-                    .unwrap_or(false)
+                    .map_or(false, |(ts, _)| ts.elapsed() > TIMERS_CHECK_INTERVAL)
                 {
                     to_check.push(sockets.pop_front().unwrap().1);
                 }

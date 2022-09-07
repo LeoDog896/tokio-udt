@@ -62,7 +62,7 @@ impl RateControl {
 
     pub(crate) fn init(&mut self, mss: u32, flow: &UdtFlow, seq_number: SeqNumber) {
         self.last_rate_increase = Instant::now();
-        self.mss = mss as f64;
+        self.mss = f64::from(mss);
         self.max_window_size = flow.flow_window_size as f64;
 
         self.slow_start = true;
@@ -76,22 +76,26 @@ impl RateControl {
         self.rtt = flow.rtt;
     }
 
+    #[must_use]
     pub fn get_pkt_send_period(&self) -> Duration {
         self.pkt_send_period
     }
 
-    pub fn get_congestion_window_size(&self) -> u32 {
-        self.congestion_window_size as u32
+    #[must_use]
+    pub fn get_congestion_window_size(&self) -> f64 {
+        self.congestion_window_size
     }
 
+    #[must_use]
     pub fn get_ack_pkt_interval(&self) -> usize {
         self.ack_pkt_interval
     }
 
+    #[must_use]
     pub fn get_ack_period(&self) -> Duration {
         std::cmp::min(SYN_INTERVAL, self.ack_period)
     }
-
+    
     pub fn set_rtt(&mut self, rtt: Duration) {
         self.rtt = rtt;
     }

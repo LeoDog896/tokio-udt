@@ -17,8 +17,8 @@ impl UdtDataPacket {
         Ok(Self { header, data })
     }
 
-    pub fn payload_len(&self) -> u32 {
-        self.data.len() as u32
+    pub fn payload_len(&self) -> usize {
+        self.data.len()
     }
 
     pub fn serialize(&self) -> Vec<u8> {

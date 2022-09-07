@@ -88,9 +88,9 @@ impl RcvBuffer {
             self.next_to_read = *key + 1;
         }
 
-        to_remove.iter().for_each(|k| {
-            self.packets.remove(k);
-        });
+        for k in to_remove {
+            self.packets.remove(&k);
+        }
 
         written
     }

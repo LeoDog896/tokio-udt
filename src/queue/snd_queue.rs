@@ -70,7 +70,7 @@ impl UdtSndQueue {
                 socket
                     .send_data_packets(packets)
                     .await
-                    .expect("failed to send packets")
+                    .expect("failed to send packets");
             }
         });
 

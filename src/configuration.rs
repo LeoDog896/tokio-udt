@@ -46,6 +46,7 @@ pub struct UdtConfiguration {
 }
 
 impl UdtConfiguration {
+    /// Gets the implemented UDT protocol version.
     pub fn udt_version(&self) -> u32 {
         UDT_VERSION
     }

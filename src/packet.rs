@@ -8,6 +8,7 @@ pub(crate) enum UdtPacket {
     Data(UdtDataPacket),
 }
 
+/// Defines a packet that cna be sent in a UDT protocol
 impl UdtPacket {
     pub fn get_dest_socket_id(&self) -> u32 {
         match self {
@@ -16,6 +17,7 @@ impl UdtPacket {
         }
     }
 
+    /// Serializes this packet into a buffer
     pub fn serialize(&self) -> Vec<u8> {
         match self {
             Self::Control(p) => p.serialize(),
@@ -23,6 +25,9 @@ impl UdtPacket {
         }
     }
 
+    /// Deserializes this buffer into a packet.
+    ///
+    /// This cannot deserialize empty packets.
     pub fn deserialize(raw: &[u8]) -> Result<Self> {
         if raw.is_empty() {
             return Err(Error::new(

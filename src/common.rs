@@ -1,5 +1,6 @@
 use std::net::IpAddr;
 
+/// Converts an IP address bytes.
 pub fn ip_to_bytes(ip: IpAddr) -> [u8; 16] {
     match ip {
         IpAddr::V4(addr) => {

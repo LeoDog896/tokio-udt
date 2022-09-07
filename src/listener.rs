@@ -5,12 +5,13 @@ use crate::udt::{SocketRef, Udt};
 use std::net::SocketAddr;
 use tokio::io::{Error, ErrorKind, Result};
 
-/// An object representing a UDT socket listening for incoming connections
+/// An I/O object representing a UTP protocol overlaying UDP
 pub struct UdtListener {
     socket: SocketRef,
 }
 
 impl UdtListener {
+    /// Creates a new UTP over UDP socket and attempts to bind it to `bind_addr`
     pub async fn bind(bind_addr: SocketAddr, config: Option<UdtConfiguration>) -> Result<Self> {
         let socket = {
             let mut udt = Udt::get().write().await;
@@ -93,10 +94,12 @@ impl UdtListener {
         Ok((peer_addr, UdtConnection::new(accepted_socket)))
     }
 
+    /// Returns the local address this socket is bound to.
     pub fn local_addr(&self) -> Result<SocketAddr> {
         self.socket.multiplexer().unwrap().channel.local_addr()
     }
 
+    /// Returns the ID of the socket (unique to others)
     pub fn socket_id(&self) -> u32 {
         self.socket.socket_id
     }

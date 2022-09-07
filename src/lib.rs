@@ -9,7 +9,7 @@ reliable data streaming and messaging services.
 
 # Usage
 
-##  UDT server example
+## UDT server example
 
 Bind a port with [`UdtListener`]:
 

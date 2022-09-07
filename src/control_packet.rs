@@ -105,8 +105,7 @@ impl UdtControlPacket {
 
     pub fn ack_seq_number(&self) -> Option<AckSeqNumber> {
         match self.packet_type {
-            ControlPacketType::Ack(_) => Some(self.additional_info.into()),
-            ControlPacketType::Ack2 => Some(self.additional_info.into()),
+            ControlPacketType::Ack(_) | ControlPacketType::Ack2 => Some(self.additional_info.into()),
             _ => None,
         }
     }
@@ -145,11 +144,11 @@ impl UdtControlPacket {
 
         let packet_type = ControlPacketType::deserialize(raw)?;
         Ok(Self {
+            packet_type,
             reserved,
             additional_info,
             timestamp,
             dest_socket_id,
-            packet_type,
         })
     }
 }
@@ -195,12 +194,12 @@ impl ControlPacketType {
         let packet = match type_id {
             0x0000 => Self::Handshake(HandShakeInfo::deserialize(&raw_control_packet[16..])?),
             0x0001 => Self::KeepAlive,
-            0x0002 => Self::Ack(AckInfo::deserialize(&raw_control_packet[16..])?),
-            0x0003 => Self::Nak(NakInfo::deserialize(&raw_control_packet[16..])?),
+            0x0002 => Self::Ack(AckInfo::deserialize(&raw_control_packet[16..])),
+            0x0003 => Self::Nak(NakInfo::deserialize(&raw_control_packet[16..])),
             0x0005 => Self::Shutdown,
             0x0006 => Self::Ack2,
             0x0007 => {
-                Self::MsgDropRequest(DropRequestInfo::deserialize(&raw_control_packet[16..])?)
+                Self::MsgDropRequest(DropRequestInfo::deserialize(&raw_control_packet[16..]))
             }
             0x7fff => Self::UserDefined,
             _ => {
@@ -283,17 +282,17 @@ pub(crate) struct AckInfo {
 }
 
 impl AckInfo {
-    pub fn deserialize(raw: &[u8]) -> Result<Self> {
+    pub fn deserialize(raw: &[u8]) -> Self {
         let get_u32 =
             |idx: usize| u32::from_be_bytes(raw[(idx * 4)..(idx + 1) * 4].try_into().unwrap());
 
         let next_seq_number: SeqNumber = get_u32(0).into();
 
         if raw.len() <= 4 {
-            return Ok(Self {
+            return Self {
                 next_seq_number,
                 info: None,
-            });
+            };
         }
         let info = AckOptionalInfo {
             rtt: get_u32(1),
@@ -302,10 +301,10 @@ impl AckInfo {
             pack_recv_rate: get_u32(4),
             link_capacity: get_u32(5),
         };
-        Ok(Self {
+        Self {
             next_seq_number,
             info: Some(info),
-        })
+        }
     }
 
     pub fn serialize(&self) -> Vec<u8> {
@@ -342,7 +341,7 @@ pub(crate) struct NakInfo {
 }
 
 impl NakInfo {
-    pub fn deserialize(raw: &[u8]) -> Result<Self> {
+    pub fn deserialize(raw: &[u8]) -> Self {
         let losses: Vec<u32> = raw
             .chunks(4)
             .filter_map(|chunk| {
@@ -352,7 +351,7 @@ impl NakInfo {
                 Some(u32::from_be_bytes(chunk.try_into().unwrap()))
             })
             .collect();
-        Ok(Self { loss_info: losses })
+        Self { loss_info: losses }
     }
 
     pub fn serialize(&self) -> Vec<u8> {
@@ -370,14 +369,14 @@ pub(crate) struct DropRequestInfo {
 }
 
 impl DropRequestInfo {
-    pub fn deserialize(raw: &[u8]) -> Result<Self> {
+    pub fn deserialize(raw: &[u8]) -> Self {
         let get_u32 =
             |idx: usize| u32::from_be_bytes(raw[(idx * 4)..(idx + 1) * 4].try_into().unwrap());
 
-        Ok(Self {
+        Self {
             first_seq_number: get_u32(0).into(),
             last_seq_number: get_u32(1).into(),
-        })
+        }
     }
 
     pub fn serialize(&self) -> Vec<u8> {

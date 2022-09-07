@@ -11,7 +11,7 @@ async fn main() {
     println!("Connected!");
 
     let buffer: Vec<u8> = std::iter::repeat(b"Hello World!")
-        .take(100000)
+        .take(100_000)
         .flat_map(|b| *b)
         .collect();
     println!("Message length: {}", buffer.len());

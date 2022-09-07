@@ -152,7 +152,7 @@ impl Udt {
                 Some(config),
             )
             .with_peer(peer, hs.socket_id)
-            .with_listen_socket(listener_socket.socket_id, multiplexer);
+            .with_listen_socket(listener_socket.socket_id, &multiplexer);
             new_socket.open();
             new_socket
         };

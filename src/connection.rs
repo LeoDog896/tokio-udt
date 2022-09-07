@@ -87,9 +87,10 @@ impl UdtConnection {
     }
 
     pub async fn close(&self) {
-        self.socket.close().await
+        self.socket.close().await;
     }
 
+    #[must_use]
     pub fn socket_id(&self) -> u32 {
         self.socket.socket_id
     }
@@ -137,17 +138,16 @@ impl AsyncWrite for UdtConnection {
     }
 
     fn poll_flush(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<()>> {
-        match self.socket.snd_buffer_is_empty() {
-            true => Poll::Ready(Ok(())),
-            false => {
-                let waker = cx.waker().clone();
-                let socket = self.socket.clone();
-                tokio::spawn(async move {
-                    socket.wait_for_next_ack_or_empty_snd_buffer().await;
-                    waker.wake();
-                });
-                Poll::Pending
-            }
+        if self.socket.snd_buffer_is_empty() {
+            Poll::Ready(Ok(()))
+        } else {
+            let waker = cx.waker().clone();
+            let socket = self.socket.clone();
+            tokio::spawn(async move {
+                socket.wait_for_next_ack_or_empty_snd_buffer().await;
+                waker.wake();
+            });
+            Poll::Pending
         }
     }
 

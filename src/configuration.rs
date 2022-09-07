@@ -47,7 +47,8 @@ pub struct UdtConfiguration {
 
 impl UdtConfiguration {
     /// Gets the implemented UDT protocol version.
-    pub fn udt_version(&self) -> u32 {
+    #[must_use]
+    pub fn udt_version() -> u32 {
         UDT_VERSION
     }
 }
@@ -56,7 +57,7 @@ impl Default for UdtConfiguration {
     fn default() -> Self {
         Self {
             mss: DEFAULT_MSS,
-            flight_flag_size: 256000,
+            flight_flag_size: 256_000,
             snd_buf_size: DEFAULT_UDT_BUF_SIZE,
             rcv_buf_size: DEFAULT_UDT_BUF_SIZE * 2,
             udp_snd_buf_size: DEFAULT_UDP_BUF_SIZE,

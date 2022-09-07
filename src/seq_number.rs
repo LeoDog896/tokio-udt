@@ -66,7 +66,7 @@ impl<T: SeqConstants> std::ops::Add<i32> for GenericSeqNumber<T> {
     type Output = GenericSeqNumber<T>;
 
     fn add(self, rhs: i32) -> Self {
-        let resp = ((self.number as i64 + rhs as i64).rem_euclid(T::MAX_NUMBER as i64 + 1)) as u32;
+        let resp = ((i64::from(self.number) + i64::from(rhs)).rem_euclid(T::MAX_NUMBER as i64 + 1)) as u32;
         resp.into()
     }
 }
@@ -83,20 +83,20 @@ impl<T: SeqConstants> std::ops::Sub<i32> for GenericSeqNumber<T> {
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Copy)]
 pub struct SeqNumberConstants;
 impl SeqConstants for SeqNumberConstants {
-    const MAX_NUMBER: u32 = 0x7fffffff;
+    const MAX_NUMBER: u32 = 0x7fff_ffff;
 }
 pub type SeqNumber = GenericSeqNumber<SeqNumberConstants>;
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Copy)]
 pub struct AckSeqNumberConstants;
 impl SeqConstants for AckSeqNumberConstants {
-    const MAX_NUMBER: u32 = 0x7fffffff;
+    const MAX_NUMBER: u32 = 0x7fff_ffff;
 }
 pub type AckSeqNumber = GenericSeqNumber<AckSeqNumberConstants>;
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Copy)]
 pub struct MsgNumberConstants;
 impl SeqConstants for MsgNumberConstants {
-    const MAX_NUMBER: u32 = 0x1fffffff;
+    const MAX_NUMBER: u32 = 0x1fff_ffff;
 }
 pub type MsgNumber = GenericSeqNumber<MsgNumberConstants>;

@@ -48,10 +48,10 @@ impl UdtDataPacketHeader {
                 "data packet header is too short",
             ));
         }
-        let seq_number = u32::from_be_bytes(raw[0..4].try_into().unwrap()) & 0x7fffffff;
-        let position: PacketPosition = ((raw[4] & 0b11000000) >> 6).try_into()?;
-        let in_order = (raw[4] & 0b00100000) != 0;
-        let msg_number = u32::from_be_bytes(raw[4..8].try_into().unwrap()) & 0x1fffffff;
+        let seq_number = u32::from_be_bytes(raw[0..4].try_into().unwrap()) & 0x7fff_ffff;
+        let position: PacketPosition = ((raw[4] & 0b1100_0000) >> 6).try_into()?;
+        let in_order = (raw[4] & 0b0010_0000) != 0;
+        let msg_number = u32::from_be_bytes(raw[4..8].try_into().unwrap()) & 0x1fff_ffff;
         let timestamp = u32::from_be_bytes(raw[8..12].try_into().unwrap());
         let dest_socket_id = u32::from_be_bytes(raw[12..16].try_into().unwrap());
         Ok(Self {
@@ -69,7 +69,7 @@ impl UdtDataPacketHeader {
         buffer.extend_from_slice(&self.seq_number.number().to_be_bytes());
 
         let block: u32 = ((self.position as u32) << 30)
-            + ((self.in_order as u32) << 29)
+            + (u32::from(self.in_order) << 29)
             + self.msg_number.number();
 
         buffer.extend_from_slice(&block.to_be_bytes());

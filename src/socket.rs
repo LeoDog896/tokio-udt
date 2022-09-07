@@ -142,10 +142,10 @@ impl UdtSocket {
     pub fn with_listen_socket(
         mut self,
         listen_socket_id: SocketId,
-        mux: Arc<UdtMultiplexer>,
+        mux: &Arc<UdtMultiplexer>,
     ) -> Self {
         self.listen_socket = Some(listen_socket_id);
-        *self.multiplexer.write().unwrap() = Arc::downgrade(&mux);
+        *self.multiplexer.write().unwrap() = Arc::downgrade(mux);
         self
     }
 
@@ -198,7 +198,7 @@ impl UdtSocket {
                 self.configuration.read().unwrap().mss,
                 &self.flow.read().unwrap(),
                 self.state().curr_snd_seq_number,
-            )
+            );
         }
 
         *self.status.lock().unwrap() = UdtStatus::Connected;
@@ -309,7 +309,7 @@ impl UdtSocket {
                     .get_congestion_window_size();
                 let window_size = std::cmp::min(
                     self.flow.read().unwrap().flow_window_size,
-                    congestion_window_size,
+                    congestion_window_size as u32,
                 );
                 let mut state = self.state();
                 if (state.curr_snd_seq_number - state.last_ack_received) > window_size as i32 {
@@ -418,7 +418,7 @@ impl UdtSocket {
         }
 
         let dest_socket_id = hs.socket_id;
-        let udt_version = self.configuration.read().unwrap().udt_version();
+        let udt_version = UdtConfiguration::udt_version();
         if hs.udt_version != udt_version || hs.socket_type != self.socket_type {
             // Reject request
             let mut hs_response = hs.clone();
@@ -494,7 +494,7 @@ impl UdtSocket {
                             configuration.mss,
                             &self.flow.read().unwrap(),
                             state.curr_snd_seq_number,
-                        )
+                        );
                     }
 
                     *self.status.lock().unwrap() = UdtStatus::Connected;
@@ -623,18 +623,17 @@ impl UdtSocket {
                 let mut state = self.state();
                 while let Some(loss) = loss_iter.next() {
                     let (seq_start, seq_end) = {
-                        if loss & 0x8000_0000 != 0 {
-                            if let Some(seq_end) = loss_iter.next() {
-                                let seq_start: SeqNumber = (loss & 0x7fff_ffff).into();
-                                let seq_end: SeqNumber = (*seq_end).into();
-                                (seq_start, seq_end)
-                            } else {
-                                broken = true;
-                                break;
-                            }
-                        } else {
+                        if loss & 0x8000_0000 == 0 {
                             ((*loss).into(), (*loss).into())
+                        } else if let Some(seq_end) = loss_iter.next() {
+                            let seq_start: SeqNumber = (loss & 0x7fff_ffff).into();
+                            let seq_end: SeqNumber = (*seq_end).into();
+                            (seq_start, seq_end)
+                        } else {
+                            broken = true;
+                            break;
                         }
+                        
                     };
                     if (seq_start - seq_end > 0) || (seq_end - state.curr_snd_seq_number > 0) {
                         broken = true;
@@ -1120,7 +1119,7 @@ impl UdtSocket {
         let hs_packet = {
             let configuration = self.configuration.read().unwrap();
             let hs = HandShakeInfo {
-                udt_version: configuration.udt_version(),
+                udt_version: UdtConfiguration::udt_version(),
                 initial_seq_number: self.initial_seq_number,
                 max_packet_size: configuration.mss,
                 max_window_size: std::cmp::min(
@@ -1203,28 +1202,28 @@ impl UdtSocket {
     pub(crate) async fn wait_for_data_to_read(&self) {
         if let Some(notified) = {
             let status = self.status.lock().unwrap();
-            if !status.is_alive() {
-                None
-            } else {
+            if status.is_alive() {
                 let rcv_buffer = self.rcv_buffer();
                 if rcv_buffer.has_data_to_read() {
                     None
                 } else {
                     Some(self.rcv_notify.notified())
                 }
+            } else {
+                None
             }
         } {
-            notified.await
+            notified.await;
         }
     }
 
     pub(crate) async fn wait_for_connection(&self) -> UdtStatus {
         if let Some(notified) = {
             let status = self.status.lock().unwrap();
-            if *status != UdtStatus::Connecting {
-                None
-            } else {
+            if *status == UdtStatus::Connecting {
                 Some(self.connect_notify.notified())
+            } else {
+                None
             }
         } {
             notified.await;

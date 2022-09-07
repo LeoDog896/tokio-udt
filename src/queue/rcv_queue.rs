@@ -139,7 +139,13 @@ impl UdtRcvQueue {
         loop {
             let packets = {
                 let msgs = self.receive_packets(&mut buf).unwrap_or_default();
-                if !msgs.is_empty() {
+                if msgs.is_empty() {
+                    tokio::select! {
+                        _ = sleep(UDP_RCV_TIMEOUT) => (),
+                        _ = self.channel.readable() => ()
+                    };
+                    None
+                } else {
                     let packets: Vec<_> = msgs
                         .into_iter()
                         .zip(buf.chunks_exact_mut(self.mss as usize))
@@ -150,12 +156,6 @@ impl UdtRcvQueue {
                         })
                         .collect();
                     Some(packets)
-                } else {
-                    tokio::select! {
-                        _ = sleep(UDP_RCV_TIMEOUT) => (),
-                        _ = self.channel.readable() => ()
-                    };
-                    None
                 }
             };
 

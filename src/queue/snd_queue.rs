@@ -163,7 +163,7 @@ impl UdtSndQueue {
         tokio_timerfd::Delay::new(instant.into_std())
             .expect("failed to init delay")
             .await
-            .expect("timerfd failed")
+            .expect("timerfd failed");
     }
 
     #[cfg(not(target_os = "linux"))]

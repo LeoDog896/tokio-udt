@@ -36,9 +36,10 @@ impl UdtPacket {
             ));
         }
         let first_bit = (raw[0] >> 7) != 0;
-        let packet = match first_bit {
-            false => Self::Data(UdtDataPacket::deserialize(raw)?),
-            true => Self::Control(UdtControlPacket::deserialize(raw)?),
+        let packet = if first_bit {
+          Self::Control(UdtControlPacket::deserialize(raw)?)
+        } else {
+            Self::Data(UdtDataPacket::deserialize(raw)?)
         };
         Ok(packet)
     }
@@ -49,7 +50,7 @@ impl UdtPacket {
                 ControlPacketType::Handshake(info) => Some(info),
                 _ => None,
             },
-            _ => None,
+            Self::Data(_) => None,
         }
     }
 }

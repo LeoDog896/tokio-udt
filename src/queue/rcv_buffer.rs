@@ -46,14 +46,14 @@ impl RcvBuffer {
         let last = self.next_to_ack;
         if first <= last {
             return self.packets.range(first..last).next().is_some();
-        } else {
-            return self
-                .packets
-                .range(first..=SeqNumber::max())
-                .next()
-                .is_some()
-                || self.packets.range(SeqNumber::zero()..last).next().is_some();
         }
+
+        return self
+            .packets
+            .range(first..=SeqNumber::max())
+            .next()
+            .is_some()
+            || self.packets.range(SeqNumber::zero()..last).next().is_some();
     }
 
     pub fn read_buffer(&mut self, buf: &mut ReadBuf<'_>) -> usize {

@@ -70,7 +70,7 @@ impl UdtListener {
                     let socket_id = *socket_id;
                     queue.remove(&socket_id);
                     break socket_id;
-                }
+                };
                 self.socket.accept_notify.notified()
             };
             notified.await
@@ -100,6 +100,7 @@ impl UdtListener {
     }
 
     /// Returns the ID of the socket (unique to others)
+    #[must_use]
     pub fn socket_id(&self) -> u32 {
         self.socket.socket_id
     }

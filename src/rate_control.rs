@@ -63,7 +63,7 @@ impl RateControl {
     pub(crate) fn init(&mut self, mss: u32, flow: &UdtFlow, seq_number: SeqNumber) {
         self.last_rate_increase = Instant::now();
         self.mss = f64::from(mss);
-        self.max_window_size = flow.flow_window_size as f64;
+        self.max_window_size = f64::from(flow.flow_window_size);
 
         self.slow_start = true;
         self.loss = false;
@@ -95,7 +95,7 @@ impl RateControl {
     pub fn get_ack_period(&self) -> Duration {
         std::cmp::min(SYN_INTERVAL, self.ack_period)
     }
-    
+
     pub fn set_rtt(&mut self, rtt: Duration) {
         self.rtt = rtt;
     }
@@ -122,7 +122,7 @@ impl RateControl {
         self.last_rate_increase = now;
 
         if self.slow_start {
-            self.congestion_window_size += (ack - self.last_ack) as f64;
+            self.congestion_window_size += f64::from(ack - self.last_ack);
             self.last_ack = ack;
             if self.congestion_window_size > self.max_window_size {
                 self.slow_start = false;
@@ -135,7 +135,7 @@ impl RateControl {
             }
         } else {
             self.congestion_window_size =
-                self.recv_rate as f64 * (self.rtt + self.rc_interval).as_secs_f64() + 16.0
+                f64::from(self.recv_rate) * (self.rtt + self.rc_interval).as_secs_f64() + 16.0;
         }
 
         if self.slow_start {
@@ -147,8 +147,8 @@ impl RateControl {
             return;
         }
 
-        let mut b = self.bandwidth as f64 - 1.0 / self.pkt_send_period.as_secs_f64();
-        if (self.pkt_send_period > self.last_dec_period) && (self.bandwidth as f64 / 9.0 < b) {
+        let mut b = f64::from(self.bandwidth) - 1.0 / self.pkt_send_period.as_secs_f64();
+        if (self.pkt_send_period > self.last_dec_period) && (f64::from(self.bandwidth) / 9.0 < b) {
             b = self.bandwidth as f64 / 9.0;
         }
         let increase = if b <= 0.0 {
